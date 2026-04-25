@@ -213,7 +213,7 @@ const login = async (req, res) => {
 // @route   POST /api/auth/verify-otp
 const verifyOTP = async (req, res) => {
   try {
-    const { phone, otp, firebaseVerificationId } = req.body;
+    const { phone, otp, role: requestedRole, firebaseVerificationId } = req.body;
 
     // In development, accept any 6-digit OTP
     if (process.env.NODE_ENV === 'development') {
@@ -229,12 +229,14 @@ const verifyOTP = async (req, res) => {
         });
       } else {
         const newUser = await User.create({
+          name: `User ${phone.slice(-4)}`,
+          email: `${phone.slice(1)}@quickride.test`,
           phone,
-          role: 'rider',
+          role: requestedRole || 'rider',
           isVerified: true,
           currentLocation: { type: 'Point', coordinates: [0, 0] }
         });
-        const token = generateToken(newUser._id, 'rider');
+        const token = generateToken(newUser._id, newUser.role);
         return res.json({
           success: true,
           token,

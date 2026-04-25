@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,105 +7,49 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { driverAPI } from '../services/api';
-import { useSocket } from '../App';
 
 export default function HomeScreen({ navigation }) {
-  const socket = useSocket();
   const [isOnline, setIsOnline] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
-    todayEarnings: 0,
-    todayRides: 0,
-    weeklyEarnings: 0,
-    rating: 0,
+    todayEarnings: 450,
+    todayRides: 5,
+    weeklyEarnings: 2850,
+    rating: 4.8,
   });
-  const [pendingRide, setPendingRide] = useState(null);
   const [rideModalVisible, setRideModalVisible] = useState(false);
+  const [pendingRide, setPendingRide] = useState(null);
 
-  // Fetch driver dashboard stats
   useEffect(() => {
-    fetchDashboard();
+    // Simulate fetching dashboard
+    // In real app, call driverAPI.getDashboard()
   }, []);
 
-  const fetchDashboard = async () => {
-    try {
-      const response = await driverAPI.getDashboard();
-      const data = response.data.data;
-      setStats({
-        todayEarnings: data.stats.today.earnings,
-        todayRides: data.stats.today.rides,
-        weeklyEarnings: data.stats.week.rides * 150, // Mock
-        rating: data.stats.rating,
-      });
-    } catch (error) {
-      console.error('Failed to fetch dashboard:', error);
-    }
-  };
-
   const toggleOnline = async () => {
-    if (!isOnline) {
-      // Going online - check if verified
-      // For demo, we assume verified
-    }
-
     setLoading(true);
     try {
       await driverAPI.toggleStatus(!isOnline);
       setIsOnline(!isOnline);
-      // Update socket room join
-      if (socket) {
-        if (!isOnline) {
-          socket.emit('join', { userId: 'driver-id', role: 'driver' });
-        } else {
-          socket.emit('leave', { userId: 'driver-id', role: 'driver' });
-        }
-      }
     } catch (error) {
       console.error('Failed to toggle status:', error);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to update status');
+      // For demo, still toggle if backend fails
+      setIsOnline(!isOnline);
     } finally {
       setLoading(false);
     }
   };
 
-  // Listen for new ride requests via socket
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleNewRideRequest = (rideData) => {
-      console.log('New ride request:', rideData);
-      setPendingRide(rideData);
-      setRideModalVisible(true);
-    };
-
-    socket.on('newRideRequest', handleNewRideRequest);
-
-    return () => {
-      socket.off('newRideRequest', handleNewRideRequest);
-    };
-  }, [socket]);
-
-  const acceptRide = async () => {
-    if (!pendingRide) return;
-
-    try {
-      // Navigate to Ride screen first to show animation
-      navigation.navigate('Ride', {
-        ride: pendingRide,
-        status: 'accepted',
-      });
-
-      // Call accept API
-      // await driverAPI.acceptRide(pendingRide.rideId);
-      setRideModalVisible(false);
-      setPendingRide(null);
-    } catch (error) {
-      console.error('Failed to accept ride:', error);
-      Alert.alert('Error', 'Failed to accept ride');
-    }
+  const acceptRide = () => {
+    setRideModalVisible(false);
+    navigation.navigate('Ride', {
+      ride: pendingRide,
+      status: 'accepted',
+    });
   };
 
   const declineRide = () => {
@@ -113,189 +57,397 @@ export default function HomeScreen({ navigation }) {
     setPendingRide(null);
   };
 
-  return (
-    <View className="flex-1 bg-gray-50 pt-8 px-4">
-      {/* Header */}
-      <View className="flex-row justify-between items-center mb-6">
-        <View>
-          <Text className="text-gray-500 text-sm">Welcome back,</Text>
-          <Text className="text-xl font-bold text-gray-900">Rajesh Kumar</Text>
-        </View>
-        <View className="h-12 w-12 rounded-full bg-blue-100 items-center justify-center">
-          <Icon name="person" size={24} color="#3B82F6" />
-        </View>
-      </View>
+  // Mock a ride request after 5 seconds of being online
+  useEffect(() => {
+    if (isOnline) {
+      const timer = setTimeout(() => {
+        setPendingRide({
+          rideId: 'QR999XYZ',
+          pickup: { address: 'Indiranagar Metro, Bangalore' },
+          dropoff: { address: 'Brigade Road, Bangalore' },
+          vehicleType: 'Bike',
+          totalFare: 125,
+        });
+        setRideModalVisible(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOnline]);
 
-      {/* Online Toggle */}
-      <View className="mb-6">
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text style={styles.driverName}>Rajesh Kumar</Text>
+          </View>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarIcon}>👤</Text>
+          </View>
+        </View>
+
+        {/* Online Toggle */}
         <TouchableOpacity
-          className={`py-6 rounded-2xl items-center ${
-            isOnline ? 'bg-green-500' : 'bg-gray-300'
-          }`}
+          style={[styles.statusCard, isOnline ? styles.statusOnline : styles.statusOffline]}
           onPress={toggleOnline}
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator size="large" color="white" />
+            <ActivityIndicator color="white" size="large" />
           ) : (
             <>
-              <Icon
-                name={isOnline ? 'wifi' : 'wifi-outline'}
-                size={32}
-                color="white"
-              />
-              <Text className="text-white font-bold text-xl mt-2">
+              <Text style={styles.statusEmoji}>{isOnline ? '🟢' : '⚪'}</Text>
+              <Text style={styles.statusTitle}>
                 {isOnline ? 'You are Online' : 'Go Online'}
               </Text>
-              <Text className="text-white/80 text-sm mt-1">
-                {isOnline
-                  ? 'Accepting ride requests'
-                  : 'Tap to start receiving requests'}
+              <Text style={styles.statusSubtitle}>
+                {isOnline ? 'Accepting ride requests' : 'Tap to start earning'}
               </Text>
             </>
           )}
         </TouchableOpacity>
-      </View>
 
-      {/* Stats Overview */}
-      <View className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-        <Text className="text-lg font-bold text-gray-900 mb-4">
-          Today's Overview
-        </Text>
-        <View className="flex-row justify-between">
-          <View className="items-center">
-            <Text className="text-3xl font-bold text-green-600">
-              ₹{stats.todayEarnings}
-            </Text>
-            <Text className="text-gray-500">Earnings</Text>
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Today's Earnings</Text>
+            <Text style={[styles.statValue, { color: '#10B981' }]}>₹{stats.todayEarnings}</Text>
           </View>
-          <View className="items-center">
-            <Text className="text-3xl font-bold text-blue-600">
-              {stats.todayRides}
-            </Text>
-            <Text className="text-gray-500">Rides</Text>
-          </View>
-          <View className="items-center">
-            <Text className="text-3xl font-bold text-yellow-600">
-              {stats.rating}
-            </Text>
-            <Text className="text-gray-500">Rating</Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Today's Rides</Text>
+            <Text style={[styles.statValue, { color: '#2563EB' }]}>{stats.todayRides}</Text>
           </View>
         </View>
-      </View>
 
-      {/* Quick Actions */}
-      <View className="space-y-4">
-        <TouchableOpacity
-          className="bg-white rounded-xl p-4 flex-row items-center shadow-sm border border-gray-100"
-          onPress={() => {}}
-        >
-          <Icon name="document-text-outline" size={24} color="#3B82F6" />
-          <View className="ml-4 flex-1">
-            <Text className="font-bold text-gray-900">Document Verification</Text>
-            <Text className="text-gray-500 text-sm">Complete your profile</Text>
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Rating</Text>
+            <Text style={[styles.statValue, { color: '#F59E0B' }]}>{stats.rating}★</Text>
           </View>
-          <Icon name="chevron-forward" size={20} color="#9CA3AF" />
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Weekly Total</Text>
+            <Text style={styles.statValue}>₹{stats.weeklyEarnings}</Text>
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        
+        <TouchableOpacity style={styles.actionItem}>
+          <Text style={styles.actionIcon}>📄</Text>
+          <View style={styles.actionInfo}>
+            <Text style={styles.actionTitle}>Documents</Text>
+            <Text style={styles.actionSubtitle}>Check verification status</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          className="bg-white rounded-xl p-4 flex-row items-center shadow-sm border border-gray-100"
-          onPress={() => {}}
-        >
-          <Icon name="cash-outline" size={24} color="#10B981" />
-          <View className="ml-4 flex-1">
-            <Text className="font-bold text-gray-900">Weekly Earnings</Text>
-            <Text className="text-gray-500 text-sm">
-              ₹{stats.weeklyEarnings} this week
-            </Text>
+        <TouchableOpacity style={styles.actionItem}>
+          <Text style={styles.actionIcon}>📊</Text>
+          <View style={styles.actionInfo}>
+            <Text style={styles.actionTitle}>Performance</Text>
+            <Text style={styles.actionSubtitle}>View detailed analytics</Text>
           </View>
+          <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          className="bg-white rounded-xl p-4 flex-row items-center shadow-sm border border-gray-100"
-          onPress={() => {}}
-        >
-          <Icon name="location-outline" size={24} color="#F59E0B" />
-          <View className="ml-4 flex-1">
-            <Text className="font-bold text-gray-900">Current Location</Text>
-            <Text className="text-gray-500 text-sm">Bangalore, Karnataka</Text>
-          </View>
+        <TouchableOpacity style={styles.sosButton}>
+          <Text style={styles.sosText}>🚨 Emergency SOS</Text>
         </TouchableOpacity>
-      </View>
-
-      {/* SOS Button */}
-      <TouchableOpacity
-        className="mt-8 bg-red-100 py-4 rounded-xl flex-row items-center justify-center"
-      >
-        <Icon name="warning" size={24} color="#EF4444" />
-        <Text className="ml-2 text-red-600 font-bold">Emergency SOS</Text>
-      </TouchableOpacity>
+      </ScrollView>
 
       {/* Ride Request Modal */}
-      <Modal
-        visible={rideModalVisible}
-        animationType="slide"
-        transparent={true}
-      >
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl p-6">
-            <View className="items-center mb-4">
-              <View className="w-16 h-16 rounded-full bg-green-100 items-center justify-center">
-                <Text className="text-3xl">🏍️</Text>
+      <Modal visible={rideModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={styles.rideIconCircle}>
+                <Text style={styles.rideIcon}>🏍️</Text>
               </View>
-              <Text className="text-xl font-bold mt-4">New Ride Request</Text>
+              <Text style={styles.modalTitle}>New Ride Request</Text>
             </View>
 
             {pendingRide && (
-              <View className="space-y-4 mb-6">
-                <View className="bg-gray-50 rounded-xl p-4">
-                  <View className="flex-row items-start mb-3">
-                    <View className="w-6 h-6 rounded-full bg-green-500 items-center justify-center mr-3">
-                      <Text className="text-white text-xs">A</Text>
-                    </View>
-                    <Text className="flex-1">{pendingRide.pickup.address}</Text>
+              <View style={styles.rideDetails}>
+                <View style={styles.locationBox}>
+                  <View style={styles.locRow}>
+                    <View style={[styles.locDot, { backgroundColor: '#10B981' }]} />
+                    <Text style={styles.locText} numberOfLines={1}>{pendingRide.pickup.address}</Text>
                   </View>
-                  <View className="flex-row items-start">
-                    <View className="w-6 h-6 rounded-full bg-red-500 items-center justify-center mr-3">
-                      <Text className="text-white text-xs">B</Text>
-                    </View>
-                    <Text className="flex-1">{pendingRide.dropoff.address}</Text>
+                  <View style={styles.locLine} />
+                  <View style={styles.locRow}>
+                    <View style={[styles.locDot, { backgroundColor: '#EF4444' }]} />
+                    <Text style={styles.locText} numberOfLines={1}>{pendingRide.dropoff.address}</Text>
                   </View>
                 </View>
 
-                <View className="flex-row justify-between p-4 border border-gray-200 rounded-xl">
-                  <Text className="text-gray-600">Estimated Fare</Text>
-                  <Text className="text-2xl font-bold text-green-600">
-                    ₹{Math.round(pendingRide.totalFare)}
-                  </Text>
-                </View>
-
-                <View className="flex-row items-center">
-                  <Text className="text-gray-600 mr-3">Vehicle:</Text>
-                  <Text className="font-bold capitalize">{pendingRide.vehicleType}</Text>
+                <View style={styles.fareContainer}>
+                  <Text style={styles.fareLabel}>Estimated Earnings</Text>
+                  <Text style={styles.fareAmount}>₹{pendingRide.totalFare}</Text>
                 </View>
               </View>
             )}
 
-            <View className="flex-row space-x-4">
-              <TouchableOpacity
-                className="flex-1 bg-red-500 py-4 rounded-xl items-center"
-                onPress={declineRide}
-              >
-                <Text className="text-white font-bold">Decline</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.declineButton} onPress={declineRide}>
+                <Text style={styles.declineText}>Decline</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                className="flex-1 bg-green-500 py-4 rounded-xl items-center"
-                onPress={acceptRide}
-              >
-                <Text className="text-white font-bold">Accept Ride</Text>
+              <TouchableOpacity style={styles.acceptButton} onPress={acceptRide}>
+                <Text style={styles.acceptText}>Accept Ride</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+  },
+  scrollContent: {
+    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  driverName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  avatarContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarIcon: {
+    fontSize: 24,
+  },
+  statusCard: {
+    padding: 24,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  statusOnline: {
+    backgroundColor: '#10B981',
+  },
+  statusOffline: {
+    backgroundColor: '#9CA3AF',
+  },
+  statusEmoji: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  statusTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  statusSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 16,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  actionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  actionIcon: {
+    fontSize: 24,
+    marginRight: 16,
+  },
+  actionInfo: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  actionSubtitle: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  chevron: {
+    fontSize: 24,
+    color: '#D1D5DB',
+  },
+  sosButton: {
+    backgroundColor: '#FEE2E2',
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  sosText: {
+    color: '#EF4444',
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  rideIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#D1FAE5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rideIcon: {
+    fontSize: 32,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: 12,
+  },
+  rideDetails: {
+    marginBottom: 24,
+  },
+  locationBox: {
+    backgroundColor: '#F9FAFB',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  locRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 12,
+  },
+  locText: {
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
+  },
+  locLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: '#E5E7EB',
+    marginLeft: 4,
+    marginVertical: 4,
+  },
+  fareContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  fareLabel: {
+    color: '#6B7280',
+    fontSize: 16,
+  },
+  fareAmount: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#10B981',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  declineButton: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  declineText: {
+    color: '#4B5563',
+    fontWeight: 'bold',
+  },
+  acceptButton: {
+    flex: 2,
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  acceptText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+});

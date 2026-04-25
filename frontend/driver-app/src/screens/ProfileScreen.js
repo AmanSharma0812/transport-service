@@ -4,131 +4,269 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function ProfileScreen() {
   const driver = {
     name: 'Rajesh Kumar',
     phone: '+91 9876543210',
-    email: 'rajesh@example.com',
+    email: 'rajesh.driver@example.com',
     rating: 4.8,
-    totalRides: 342,
-    vehicle: 'Bajaj Pulsar',
-    registrationNumber: 'KA 01 AB 1234',
-    memberSince: 'March 2023',
+    totalRides: 1540,
+    vehicle: 'Honda Shine - KA 01 AB 1234',
   };
 
   const menuItems = [
-    { icon: 'document-text-outline', title: 'Documents', subtitle: 'Upload verification' },
-    { icon: 'settings-outline', title: 'Settings', subtitle: 'App preferences' },
-    { icon: 'help-circle-outline', title: 'Help & Support', subtitle: '24/7 assistance' },
-    { icon: 'information-circle-outline', title: 'About', subtitle: 'Version 1.0.0' },
+    { icon: '👤', title: 'Personal Info' },
+    { icon: '🏍️', title: 'Vehicle Details' },
+    { icon: '📄', title: 'Documents' },
+    { icon: '💳', title: 'Payout Settings' },
+    { icon: '⚙️', title: 'Settings' },
   ];
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: () => console.log('Logout') },
+      { text: 'Logout', style: 'destructive' },
     ]);
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      {/* Profile Header */}
-      <View className="bg-green-600 pt-12 pb-20 rounded-b-3xl px-6">
-        <View className="flex-row items-center">
-          <View className="h-20 w-20 rounded-full bg-white items-center justify-center">
-            <Text className="text-3xl font-bold text-green-600">
-              {driver.name.charAt(0)}
-            </Text>
-          </View>
-          <View className="ml-4 flex-1">
-            <Text className="text-2xl font-bold text-white">{driver.name}</Text>
-            <Text className="text-green-100">{driver.phone}</Text>
-            <Text className="text-green-200 text-sm mt-1">
-              {driver.memberSince}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Stats Cards */}
-      <View className="mx-4 -mt-12 bg-white rounded-2xl shadow-lg p-4">
-        <View className="flex-row justify-around">
-          <View className="items-center">
-            <Text className="text-2xl font-bold text-green-600">
-              {driver.totalRides}
-            </Text>
-            <Text className="text-gray-500 text-sm">Rides</Text>
-          </View>
-          <View className="w-px bg-gray-200" />
-          <View className="items-center">
-            <Text className="text-2xl font-bold text-yellow-600">
-              {driver.rating}
-            </Text>
-            <Text className="text-gray-500 text-sm">Rating</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Vehicle Info */}
-      <View className="mx-4 mt-6 bg-white rounded-2xl p-6 shadow-sm">
-        <Text className="text-lg font-bold text-gray-900 mb-4">
-          Vehicle Details
-        </Text>
-        <View className="space-y-3">
-          <View className="flex-row justify-between">
-            <Text className="text-gray-500">Vehicle Type</Text>
-            <Text className="font-medium text-gray-900">
-              {driver.vehicle}
-            </Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="text-gray-500">Registration</Text>
-            <Text className="font-medium text-gray-900">
-              {driver.registrationNumber}
-            </Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="text-gray-500">Verification</Text>
-            <View className="bg-green-100 px-3 py-1 rounded-full">
-              <Text className="text-green-700 text-sm font-medium">
-                Verified
-              </Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>R</Text>
+            </View>
+            <View style={styles.headerInfo}>
+              <Text style={styles.name}>{driver.name}</Text>
+              <Text style={styles.phone}>{driver.phone}</Text>
+              <View style={styles.ratingBadge}>
+                <Text style={styles.ratingText}>{driver.rating} ★</Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      {/* Menu */}
-      <View className="mt-6 mx-4 bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            className="flex-row items-center px-4 py-4 border-b border-gray-100 last:border-b-0"
-          >
-            <Icon name={item.icon} size={24} color="#6B7280" />
-            <View className="ml-4 flex-1">
-              <Text className="text-gray-900 font-medium">{item.title}</Text>
-              <Text className="text-gray-500 text-sm">{item.subtitle}</Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
-        ))}
-      </View>
+        {/* Stats Card */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{driver.totalRides}</Text>
+            <Text style={styles.statLabel}>Rides</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>4.8</Text>
+            <Text style={styles.statLabel}>Rating</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>3y</Text>
+            <Text style={styles.statLabel}>Experience</Text>
+          </View>
+        </View>
 
-      {/* Logout */}
-      <TouchableOpacity
-        className="mx-4 mb-12 bg-red-50 py-4 rounded-xl items-center border border-red-200"
-        onPress={handleLogout}
-      >
-        <Text className="text-red-600 font-bold">Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Vehicle Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Vehicle Information</Text>
+          <View style={styles.infoCard}>
+            <Text style={styles.vehicleInfo}>{driver.vehicle}</Text>
+          </View>
+        </View>
+
+        {/* Menu Items */}
+        <View style={styles.menuCard}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity key={index} style={styles.menuItem}>
+              <View style={styles.menuLeft}>
+                <Text style={styles.menuIcon}>{item.icon}</Text>
+                <Text style={styles.menuTitle}>{item.title}</Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Logout */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>QuickRide Driver v1.0.2</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+  },
+  header: {
+    backgroundColor: '#2563EB',
+    paddingTop: 40,
+    paddingBottom: 60,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#2563EB',
+  },
+  headerInfo: {
+    marginLeft: 20,
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  phone: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  ratingBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  ratingText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  statsCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginTop: -30,
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#E5E7EB',
+  },
+  section: {
+    marginTop: 30,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  infoCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  vehicleInfo: {
+    color: '#374151',
+    fontWeight: '500',
+  },
+  menuCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginTop: 25,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    overflow: 'hidden',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  menuLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIcon: {
+    fontSize: 18,
+    marginRight: 12,
+  },
+  menuTitle: {
+    color: '#111827',
+    fontSize: 16,
+  },
+  chevron: {
+    fontSize: 24,
+    color: '#D1D5DB',
+  },
+  logoutButton: {
+    marginHorizontal: 20,
+    marginTop: 30,
+    backgroundColor: '#FEE2E2',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#DC2626',
+    fontWeight: 'bold',
+  },
+  footer: {
+    padding: 30,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+});

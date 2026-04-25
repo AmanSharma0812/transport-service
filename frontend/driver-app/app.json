@@ -1,4 +1,19 @@
 {
-  "name": "QuickRide Driver",
-  "displayName": "QuickRide Driver"
+  "expo": {
+    "name": "QuickRide Driver",
+    "slug": "quickride-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.quickride.driver"
+    },
+    "android": {
+      "package": "com.quickride.driver"
+    }
+  }
 }

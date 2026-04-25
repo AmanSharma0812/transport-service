@@ -1,6 +1,8 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://localhost:5000/api';
+// UPDATE THIS TO YOUR COMPUTER'S IP ADDRESS
+const API_URL = 'http://192.168.1.8:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -12,14 +14,11 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
-    // In React Native, we'll try to get token from storage or a simple global
-    // For simplicity, we'll rely on the existing auth storage pattern
     try {
-      const authStorage = require('@react-native-async-storage/async-storage')
-        .getItem('auth-storage');
+      const authStorage = await AsyncStorage.getItem('auth-storage');
       if (authStorage) {
-        const { state } = JSON.parse(authStorage);
-        const token = state?.token;
+        const parsed = JSON.parse(authStorage);
+        const token = parsed.state?.token || parsed.token;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -37,9 +36,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear storage and navigate to login
-      require('@react-native-async-storage/async-storage').removeItem('auth-storage');
-      // Navigation handled by component state
+      AsyncStorage.removeItem('auth-storage');
     }
     return Promise.reject(error);
   }
@@ -48,20 +45,20 @@ api.interceptors.response.use(
 export const riderAPI = {
   // Ride operations
   getFareEstimate: (pickupLat, pickupLng, dropoffLat, dropoffLng, vehicleType) =>
-    api.get('/rider/fare', {
+    api.get('/rider/estimate-fare', {
       params: { pickupLat, pickupLng, dropoffLat, dropoffLng, vehicleType },
     }),
 
-  bookRide: (data) => api.post('/rider/book', data),
+  bookRide: (data) => api.post('/rider/book-ride', data),
 
   getRideHistory: (params) => api.get('/rider/rides', { params }),
 
   getRideDetails: (rideId) => api.get(`/rider/rides/${rideId}`),
 
-  cancelRide: (rideId, reason) => api.put(`/rider/rides/${rideId}/cancel`, { reason }),
+  cancelRide: (rideId, reason) => api.post(`/rider/cancel-ride/${rideId}`, { reason }),
 
   rateRide: (rideId, rating, review, categories) =>
-    api.post(`/rider/rides/${rideId}/rate`, { rating, review, categories }),
+    api.post(`/rider/rate-ride/${rideId}`, { rating, review, categories }),
 
   // For testing admin create ride (bypasses real booking)
   createRide: (data) => api.post('/admin/rides', data),

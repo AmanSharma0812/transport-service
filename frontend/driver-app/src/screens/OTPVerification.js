@@ -7,15 +7,25 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function OTPVerification() {
+export default function OTPVerification({ route, navigation }) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
-  const navigation = useNavigation();
-  const route = useRoute();
   const { phone } = route.params || {};
+
+  const handleOtpChange = (value, index) => {
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    // Auto-focus next input
+    if (value && index < 5) {
+      // In real code, we'd use refs here
+    }
+  };
 
   const handleVerifyOTP = async () => {
     const otpString = otp.join('');
@@ -26,71 +36,138 @@ export default function OTPVerification() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: `+91${phone}`,
-          otp: otpString,
-        }),
+      // Calling real backend API with role: 'driver'
+      const response = await axios.post('http://192.168.1.8:5000/api/auth/verify-otp', {
+        phone: `+91${phone}`,
+        otp: otpString,
+        role: 'driver', // CRITICAL: Tell backend this is a driver
       });
 
-      if (response.ok) {
+      if (response.data.token) {
+        // Save token
+        await AsyncStorage.setItem('auth-storage', JSON.stringify({ 
+          token: response.data.token 
+        }));
+
         navigation.reset({
           index: 0,
           routes: [{ name: 'Main' }],
         });
-      } else {
-        Alert.alert('Error', 'Invalid OTP');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to verify OTP');
+      console.error('OTP error:', error);
+      Alert.alert('Error', 'Invalid OTP or server error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <View className="flex-1 bg-white px-8 justify-center">
-      <Text className="text-2xl font-bold text-gray-900 mb-2">Verify OTP</Text>
-      <Text className="text-gray-500 mb-8">
-        Enter the 6-digit code sent to +91 {phone}
-      </Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Verification</Text>
+          <Text style={styles.subtitle}>Enter the code sent to +91 {phone}</Text>
+        </View>
 
-      <View className="flex-row justify-between mb-8">
-        {otp.map((digit, index) => (
-          <TextInput
-            key={index}
-            className="w-14 h-14 border-2 border-green-500 rounded-xl text-center text-2xl font-bold text-gray-900 bg-green-50"
-            maxLength={1}
-            keyboardType="number-pad"
-            value={digit}
-            onChangeText={(value) => {
-              const newOtp = [...otp];
-              newOtp[index] = value;
-              setOtp(newOtp);
-            }}
-          />
-        ))}
+        <View style={styles.otpContainer}>
+          {otp.map((digit, index) => (
+            <TextInput
+              key={index}
+              style={styles.otpInput}
+              keyboardType="number-pad"
+              maxLength={1}
+              value={digit}
+              onChangeText={(text) => handleOtpChange(text, index)}
+            />
+          ))}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, isLoading && styles.buttonDisabled]}
+          onPress={handleVerifyOTP}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.buttonText}>Verify & Proceed</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.resendContainer}>
+          <Text style={styles.resendText}>Didn't receive code? </Text>
+          <Text style={styles.resendLink}>Resend OTP</Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        className="bg-green-600 py-4 rounded-xl items-center"
-        onPress={handleVerifyOTP}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text className="text-white font-bold text-lg">Verify & Continue</Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity className="mt-6 items-center">
-        <Text className="text-green-600 font-medium">Resend OTP</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 48,
+  },
+  header: {
+    marginBottom: 40,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 8,
+  },
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 40,
+  },
+  otpInput: {
+    width: 45,
+    height: 56,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  button: {
+    backgroundColor: '#2563EB',
+    height: 56,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#93C5FD',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  resendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  resendText: {
+    color: '#6B7280',
+  },
+  resendLink: {
+    color: '#2563EB',
+    fontWeight: 'bold',
+  },
+});

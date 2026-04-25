@@ -26,7 +26,8 @@ const httpServer = createServer(app);
 const ALLOWED_ORIGINS = [
   process.env.CLIENT_URL || 'http://localhost:3001',
   'http://localhost:3000',
-  'http://localhost:3001'
+  'http://localhost:3001',
+  '*' // Allow all for development/mobile testing
 ];
 
 const io = new Server(httpServer, {

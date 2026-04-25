@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { riderAPI } from '../services/api';
-import { riderAPI } from '../services/api';
 
 const VEHICLE_TYPES = [
   {
@@ -105,75 +104,35 @@ export default function HomeScreen() {
     }
   };
 
-  const bookRide = async () => {
-    if (!pickup || !dropoff) {
-      Alert.alert('Required', 'Please enter both pickup and drop locations');
-      return;
-    }
-
-    setBooking(true);
-    try {
-      // In a real app, you'd get actual coordinates from geocoding
-      // For demo, using fixed coordinates
-      const response = await riderAPI.bookRide({
-        pickupLat: 12.9716,
-        pickupLng: 77.5946,
-        pickupAddress: pickup,
-        dropoffLat: 12.9352,
-        dropoffLng: 77.6245,
-        dropoffAddress: dropoff,
-        vehicleType: selectedVehicle,
-        paymentMethod: 'cash',
-      });
-
-      setBooking(false);
-      Alert.alert('Success', 'Ride booked! Finding a driver...', [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Navigate to map to show driver animation
-            navigation.navigate('Map', {
-              pickup,
-              dropoff,
-              vehicleType: selectedVehicle,
-              estimatedFare,
-              distance,
-              rideId: response.data.data.rideId,
-            });
-          },
-        },
-      ]);
-    } catch (error) {
-      setBooking(false);
-      console.error('Booking error:', error);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to book ride');
-    }
-  };
-
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>QuickRide</Text>
+      </View>
+
       {/* Location Inputs */}
-      <View className="bg-white mx-4 mt-6 rounded-2xl shadow-lg p-4">
-        {/* Pickup */}
-        <View className="flex-row items-center py-3 border-b border-gray-100">
-          <View className="w-6 h-6 rounded-full bg-green-500 items-center justify-center mr-3">
-            <Text className="text-white text-xs">A</Text>
+      <View style={styles.card}>
+        <View style={styles.inputRow}>
+          <View style={[styles.dot, { backgroundColor: '#10B981' }]}>
+            <Text style={styles.dotText}>A</Text>
           </View>
           <TextInput
-            className="flex-1 text-base"
+            style={styles.textInput}
             placeholder="Enter pickup location"
             value={pickup}
             onChangeText={setPickup}
           />
         </View>
 
-        {/* Dropoff */}
-        <View className="flex-row items-center py-3">
-          <View className="w-6 h-6 rounded-full bg-red-500 items-center justify-center mr-3">
-            <Text className="text-white text-xs">B</Text>
+        <View style={styles.separator} />
+
+        <View style={styles.inputRow}>
+          <View style={[styles.dot, { backgroundColor: '#EF4444' }]}>
+            <Text style={styles.dotText}>B</Text>
           </View>
           <TextInput
-            className="flex-1 text-base"
+            style={styles.textInput}
             placeholder="Where to?"
             value={dropoff}
             onChangeText={setDropoff}
@@ -182,104 +141,254 @@ export default function HomeScreen() {
       </View>
 
       {/* Vehicle Selection */}
-      <Text className="text-lg font-bold text-gray-900 mx-4 mt-8 mb-4">
-        Select Vehicle
-      </Text>
-      <View className="flex-row justify-around px-4 mb-6">
+      <Text style={styles.sectionTitle}>Select Vehicle</Text>
+      <View style={styles.vehicleRow}>
         {VEHICLE_TYPES.map((vehicle) => (
           <TouchableOpacity
             key={vehicle.id}
-            className={`p-4 rounded-2xl items-center flex-1 mx-2 ${
-              selectedVehicle === vehicle.id
-                ? 'bg-blue-100 border-2 border-blue-500'
-                : 'bg-white border border-gray-200'
-            }`}
+            style={[
+              styles.vehicleCard,
+              selectedVehicle === vehicle.id ? styles.vehicleCardActive : styles.vehicleCardInactive,
+            ]}
             onPress={() => setSelectedVehicle(vehicle.id)}
           >
-            <Text className="text-4xl mb-2">{vehicle.icon}</Text>
-            <Text className="font-bold text-gray-900">{vehicle.name}</Text>
-            <Text className="text-gray-500 text-sm mt-1">
-              ₹{vehicle.baseFare} + ₹{vehicle.perKm}/km
-            </Text>
+            <Text style={styles.vehicleIcon}>{vehicle.icon}</Text>
+            <Text style={styles.vehicleName}>{vehicle.name}</Text>
+            <Text style={styles.vehicleFare}>₹{vehicle.baseFare}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Estimate Fare Button */}
-          <TouchableOpacity
-            className="bg-blue-600 py-3 rounded-xl items-center"
-            onPress={bookRide}
-            disabled={booking}
-          >
-            {booking ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white font-bold">Book Now</Text>
-            )}
-          </TouchableOpacity>
+      <TouchableOpacity style={styles.mainButton} onPress={estimateFare}>
+        <Text style={styles.mainButtonText}>Check Price</Text>
+      </TouchableOpacity>
 
-      {/* Fare Estimate Modal */}
       {showFareEstimate && (
-        <View className="mx-4 bg-white rounded-2xl p-6 shadow-lg border-2 border-blue-200 mb-6">
-          <Text className="text-lg font-bold text-gray-900 mb-4">
-            Fare Estimate
-          </Text>
+        <View style={styles.estimateCard}>
+          <Text style={styles.estimateTitle}>Fare Estimate</Text>
 
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Distance</Text>
-            <Text className="font-medium">{distance.toFixed(1)} km</Text>
+          <View style={styles.fareRow}>
+            <Text style={styles.fareLabel}>Distance</Text>
+            <Text style={styles.fareValue}>{distance.toFixed(1)} km</Text>
           </View>
 
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Vehicle</Text>
-            <Text className="font-medium capitalize">{selectedVehicle}</Text>
-          </View>
-
-          <View className="border-t border-gray-200 my-3" />
-
-          <View className="flex-row justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900">Total</Text>
-            <Text className="text-2xl font-bold text-green-600">
-              ₹{Math.round(estimatedFare)}
-            </Text>
+          <View style={styles.fareRow}>
+            <Text style={styles.fareLabel}>Total Fare</Text>
+            <Text style={styles.totalFare}>₹{Math.round(estimatedFare)}</Text>
           </View>
 
           <TouchableOpacity
-            className="bg-blue-600 py-3 rounded-xl items-center"
+            style={styles.bookButton}
             onPress={bookRide}
             disabled={booking}
           >
             {booking ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-white font-bold">Book Now</Text>
+              <Text style={styles.bookButtonText}>Book Now</Text>
             )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="mt-3 items-center"
-            onPress={() => setShowFareEstimate(false)}
-          >
-            <Text className="text-gray-500">Cancel</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Recent Locations / Offers */}
-      <View className="px-4 pb-8">
-        <Text className="text-lg font-bold text-gray-900 mb-4">Offers</Text>
-        <View className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6">
-          <Text className="text-white text-2xl font-bold mb-2">
-            🎉 Welcome Bonus
-          </Text>
-          <Text className="text-white/90 mb-4">
-            Get ₹50 off on your first 3 rides
-          </Text>
-          <Text className="text-white font-medium">Use code: FIRST50</Text>
+      {/* Offers Section */}
+      <View style={styles.offersSection}>
+        <Text style={styles.sectionTitle}>Special Offers</Text>
+        <View style={styles.offerCard}>
+          <Text style={styles.offerEmoji}>🎉</Text>
+          <View>
+            <Text style={styles.offerTitle}>Welcome Bonus</Text>
+            <Text style={styles.offerSubtitle}>Get ₹50 off on first 3 rides</Text>
+            <Text style={styles.promoCode}>Code: FIRST50</Text>
+          </View>
         </View>
       </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+  },
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  dot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  dotText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1F2937',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginLeft: 36,
+    marginVertical: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  vehicleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+  },
+  vehicleCard: {
+    flex: 1,
+    marginHorizontal: 8,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+  },
+  vehicleCardActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB',
+  },
+  vehicleCardInactive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#F3F4F6',
+  },
+  vehicleIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  vehicleName: {
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  vehicleFare: {
+    color: '#6B7280',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  mainButton: {
+    backgroundColor: '#2563EB',
+    margin: 16,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  mainButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  estimateCard: {
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: '#DBEAFE',
+  },
+  estimateTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  fareRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  fareLabel: {
+    color: '#6B7280',
+    fontSize: 16,
+  },
+  fareValue: {
+    fontWeight: '600',
+    color: '#111827',
+  },
+  totalFare: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#10B981',
+  },
+  bookButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  bookButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  offersSection: {
+    marginTop: 8,
+    paddingBottom: 32,
+  },
+  offerCard: {
+    backgroundColor: '#4F46E5',
+    marginHorizontal: 16,
+    padding: 20,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  offerEmoji: {
+    fontSize: 40,
+    marginRight: 16,
+  },
+  offerTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  offerSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+  },
+  promoCode: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+});

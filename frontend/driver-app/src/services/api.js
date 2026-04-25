@@ -1,6 +1,8 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://localhost:5000/api';
+// UPDATE THIS TO YOUR COMPUTER'S IP ADDRESS
+const API_URL = 'http://192.168.1.8:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -11,15 +13,19 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
-    // For React Native, use AsyncStorage or similar
-    // Simplified for demo - in production use @react-native-async-storage/async-storage
-    const token = require('@react-native-async-storage/async-storage').getItem('auth-token')
-      ?.then((token) => {
+  async (config) => {
+    try {
+      const authStorage = await AsyncStorage.getItem('auth-storage');
+      if (authStorage) {
+        const parsed = JSON.parse(authStorage);
+        const token = parsed.state?.token || parsed.token;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
-      });
+      }
+    } catch (e) {
+      console.error('Failed to get auth token:', e);
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -30,8 +36,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Navigate to login
-      // navigationRef.current?.navigate('Login');
+      AsyncStorage.removeItem('auth-storage');
     }
     return Promise.reject(error);
   }

@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function ProfileScreen() {
   const user = {
@@ -20,11 +21,11 @@ export default function ProfileScreen() {
   };
 
   const menuItems = [
-    { icon: 'wallet-outline', title: 'Wallet', value: '₹0' },
-    { icon: 'card-outline', title: 'Payment Methods', value: '' },
-    { icon: 'settings-outline', title: 'Settings', value: '' },
-    { icon: 'help-circle-outline', title: 'Help & Support', value: '' },
-    { icon: 'document-text-outline', title: 'Terms & Conditions', value: '' },
+    { icon: '💰', title: 'Wallet', value: '₹0' },
+    { icon: '💳', title: 'Payment Methods', value: '' },
+    { icon: '⚙️', title: 'Settings', value: '' },
+    { icon: '❓', title: 'Help & Support', value: '' },
+    { icon: '📄', title: 'Terms & Conditions', value: '' },
   ];
 
   const handleLogout = () => {
@@ -35,67 +36,213 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <StatusBar barStyle="light-content" />
+      
       {/* Profile Header */}
-      <View className="bg-blue-600 pt-12 pb-20 rounded-b-3xl px-6">
-        <View className="flex-row items-center">
-          <View className="h-20 w-20 rounded-full bg-white items-center justify-center">
-            <Text className="text-3xl font-bold text-blue-600">
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarText}>
               {user.name.charAt(0)}
             </Text>
           </View>
-          <View className="ml-4 flex-1">
-            <Text className="text-2xl font-bold text-white">{user.name}</Text>
-            <Text className="text-blue-100">{user.phone}</Text>
-            <Text className="text-blue-200 text-sm mt-1">{user.memberSince}</Text>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userPhone}>{user.phone}</Text>
+            <Text style={styles.memberText}>Member since {user.memberSince}</Text>
           </View>
         </View>
       </View>
 
-      {/* Stats Cards */}
-      <View className="mx-4 -mt-12 bg-white rounded-2xl shadow-lg p-4">
-        <View className="flex-row justify-around">
-          <View className="items-center">
-            <Text className="text-2xl font-bold text-blue-600">{user.rides}</Text>
-            <Text className="text-gray-500 text-sm">Rides</Text>
-          </View>
-          <View className="w-px bg-gray-200" />
-          <View className="items-center">
-            <Text className="text-2xl font-bold text-green-600">
-              ₹{user.totalSpent}
-            </Text>
-            <Text className="text-gray-500 text-sm">Total Spent</Text>
-          </View>
+      {/* Stats Section */}
+      <View style={styles.statsCard}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{user.rides}</Text>
+          <Text style={styles.statLabel}>Rides</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={[styles.statValue, { color: '#10B981' }]}>₹{user.totalSpent}</Text>
+          <Text style={styles.statLabel}>Total Spent</Text>
         </View>
       </View>
 
-      {/* Menu */}
-      <View className="mt-6 mx-4 bg-white rounded-2xl shadow-sm overflow-hidden">
+      {/* Menu List */}
+      <View style={styles.menuContainer}>
         {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            className="flex-row items-center px-4 py-4 border-b border-gray-100 last:border-b-0"
+          <TouchableOpacity 
+            key={index} 
+            style={[
+              styles.menuItem,
+              index === menuItems.length - 1 && { borderBottomWidth: 0 }
+            ]}
           >
-            <Icon name={item.icon} size={24} color="#6B7280" />
-            <Text className="flex-1 ml-4 text-gray-900">{item.title}</Text>
-            {item.value ? (
-              <Text className="text-gray-500">{item.value}</Text>
-            ) : (
-              <Icon name="chevron-forward" size={20} color="#9CA3AF" />
-            )}
+            <View style={styles.menuItemLeft}>
+              <Text style={styles.menuIcon}>{item.icon}</Text>
+              <Text style={styles.menuTitle}>{item.title}</Text>
+            </View>
+            <View style={styles.menuItemRight}>
+              {item.value ? (
+                <Text style={styles.menuValue}>{item.value}</Text>
+              ) : (
+                <Text style={styles.chevron}>›</Text>
+              )}
+            </View>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Logout */}
-      <TouchableOpacity
-        className="mx-4 mt-6 mb-12 bg-red-50 py-4 rounded-xl items-center border border-red-200"
-        onPress={handleLogout}
-      >
-        <Text className="text-red-600 font-bold">Logout</Text>
+      {/* Logout Button */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
+
+      <View style={styles.versionInfo}>
+        <Text style={styles.versionText}>QuickRide v1.0.4 (Beta)</Text>
+      </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+  },
+  header: {
+    backgroundColor: '#2563EB',
+    paddingTop: 60,
+    paddingBottom: 70,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  avatarText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#2563EB',
+  },
+  userInfo: {
+    marginLeft: 20,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  userPhone: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  memberText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+  },
+  statsCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginTop: -35,
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2563EB',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E5E7EB',
+  },
+  menuContainer: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginTop: 25,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  menuTitle: {
+    fontSize: 16,
+    color: '#111827',
+  },
+  menuValue: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  chevron: {
+    fontSize: 24,
+    color: '#D1D5DB',
+  },
+  logoutButton: {
+    backgroundColor: '#FEE2E2',
+    marginHorizontal: 20,
+    marginTop: 25,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#DC2626',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  versionInfo: {
+    marginTop: 30,
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+});

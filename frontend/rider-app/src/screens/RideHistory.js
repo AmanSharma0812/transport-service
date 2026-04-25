@@ -5,9 +5,9 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  Alert,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function RideHistory() {
   const [rides, setRides] = useState([]);
@@ -19,7 +19,7 @@ export default function RideHistory() {
       date: '2024-01-15 10:30 AM',
       from: 'MG Road, Bangalore',
       to: 'Whitefield, Bangalore',
-      vehicle: 'bike',
+      vehicle: 'Bike',
       status: 'completed',
       distance: '12.5 km',
       duration: '35 mins',
@@ -31,7 +31,7 @@ export default function RideHistory() {
       date: '2024-01-14 6:45 PM',
       from: 'Koramangala, Bangalore',
       to: 'Indiranagar, Bangalore',
-      vehicle: 'auto',
+      vehicle: 'Auto',
       status: 'completed',
       distance: '8.2 km',
       duration: '28 mins',
@@ -43,7 +43,7 @@ export default function RideHistory() {
       date: '2024-01-12 9:15 AM',
       from: 'HSR Layout, Bangalore',
       to: 'Electronic City, Bangalore',
-      vehicle: 'cab',
+      vehicle: 'Cab',
       status: 'cancelled',
       distance: '-',
       duration: '-',
@@ -56,80 +56,205 @@ export default function RideHistory() {
   }, []);
 
   const renderRide = ({ item }) => (
-    <View className="bg-white mx-4 my-2 p-4 rounded-xl shadow-sm border border-gray-100">
-      <View className="flex-row justify-between items-start mb-3">
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
         <View>
-          <Text className="text-sm text-gray-500">{item.date}</Text>
-          <Text className="font-bold text-gray-900">{item.rideId}</Text>
+          <Text style={styles.dateText}>{item.date}</Text>
+          <Text style={styles.idText}>{item.rideId}</Text>
         </View>
         <View
-          className={`px-3 py-1 rounded-full ${
-            item.status === 'completed'
-              ? 'bg-green-100'
-              : item.status === 'cancelled'
-              ? 'bg-red-100'
-              : 'bg-yellow-100'
-          }`}
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor: item.status === 'completed' ? '#D1FAE5' : '#FEE2E2',
+            },
+          ]}
         >
           <Text
-            className={`text-xs font-semibold ${
-              item.status === 'completed'
-                ? 'text-green-800'
-                : item.status === 'cancelled'
-                ? 'text-red-800'
-                : 'text-yellow-800'
-            }`}
+            style={[
+              styles.statusText,
+              {
+                color: item.status === 'completed' ? '#065F46' : '#991B1B',
+              },
+            ]}
           >
-            {item.status}
+            {item.status.toUpperCase()}
           </Text>
         </View>
       </View>
 
-      <View className="mb-3">
-        <View className="flex-row items-start mb-2">
-          <Icon name="location" size={16} color="#10B981" />
-          <Text className="ml-2 flex-1">{item.from}</Text>
+      <View style={styles.locationContainer}>
+        <View style={styles.locationRow}>
+          <View style={[styles.dot, { backgroundColor: '#10B981' }]} />
+          <Text style={styles.addressText} numberOfLines={1}>{item.from}</Text>
         </View>
-        <View className="flex-row items-start">
-          <Icon name="flag" size={16} color="#EF4444" />
-          <Text className="ml-2 flex-1">{item.to}</Text>
+        <View style={styles.line} />
+        <View style={styles.locationRow}>
+          <View style={[styles.dot, { backgroundColor: '#EF4444' }]} />
+          <Text style={styles.addressText} numberOfLines={1}>{item.to}</Text>
         </View>
       </View>
 
-      <View className="flex-row justify-between items-center border-t border-gray-100 pt-3">
-        <View className="flex-row items-center">
-          <Text className="capitalize text-gray-600 mr-2">
-            {item.vehicle}
-          </Text>
-          <Text className="text-gray-400">•</Text>
-          <Text className="text-gray-600 ml-2">{item.distance}</Text>
-          <Text className="text-gray-400 ml-2">•</Text>
-          <Text className="text-gray-600 ml-2">{item.duration}</Text>
+      <View style={styles.footer}>
+        <View style={styles.statsRow}>
+          <Text style={styles.vehicleText}>{item.vehicle}</Text>
+          <Text style={styles.dotSeparator}>•</Text>
+          <Text style={styles.statText}>{item.distance}</Text>
+          <Text style={styles.dotSeparator}>•</Text>
+          <Text style={styles.statText}>{item.duration}</Text>
         </View>
-        <Text className="font-bold text-lg text-gray-900">
+        <Text style={styles.fareText}>
           {item.fare > 0 ? `₹${item.fare}` : '-'}
         </Text>
       </View>
 
       {item.status === 'completed' && (
-        <TouchableOpacity className="mt-3 py-2 border border-blue-500 rounded-lg items-center">
-          <Text className="text-blue-600 font-medium">View Invoice</Text>
+        <TouchableOpacity style={styles.invoiceButton}>
+          <Text style={styles.invoiceButtonText}>View Invoice</Text>
         </TouchableOpacity>
       )}
     </View>
   );
 
   return (
-    <View className="flex-1 bg-gray-50 pt-4">
-      <Text className="text-2xl font-bold text-gray-900 px-4 mb-4">
-        Your Rides
-      </Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Your Rides</Text>
+      </View>
       <FlatList
         data={rides}
         renderItem={renderRide}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  listContent: {
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  idText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  locationContainer: {
+    marginBottom: 16,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  addressText: {
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
+  },
+  line: {
+    width: 2,
+    height: 12,
+    backgroundColor: '#E5E7EB',
+    marginLeft: 3,
+    marginVertical: 4,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingTop: 12,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  vehicleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  dotSeparator: {
+    marginHorizontal: 8,
+    color: '#D1D5DB',
+  },
+  statText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  fareText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  invoiceButton: {
+    marginTop: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2563EB',
+    alignItems: 'center',
+  },
+  invoiceButtonText: {
+    color: '#2563EB',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+});

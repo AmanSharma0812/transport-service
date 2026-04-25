@@ -11,6 +11,7 @@ const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId).select('-password');
+    console.log(`DEBUG: Auth User: ${user?._id}, Role: ${user?.role}`);
 
     if (!user || user.isBlocked) {
       return res.status(401).json({ error: 'User not found or blocked' });
@@ -26,6 +27,7 @@ const authenticate = async (req, res, next) => {
 
 const authorize = (...roles) => {
   return (req, res, next) => {
+    console.log(`DEBUG: Authorize Check - User Role: ${req.user.role}, Allowed Roles: ${roles}`);
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ error: 'Access denied' });
     }

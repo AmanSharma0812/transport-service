@@ -1,4 +1,7 @@
 {
   "name": "QuickRide Rider",
-  "displayName": "QuickRide"
+  "displayName": "QuickRide",
+  "android": {
+    "package": "com.anonymous.quickriderider"
+  }
 }

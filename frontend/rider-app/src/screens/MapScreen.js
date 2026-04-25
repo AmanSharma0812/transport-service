@@ -50,7 +50,7 @@ export default function MapScreen() {
 
   // Connect to socket for real-time updates
   useEffect(() => {
-    socketRef.current = io('http://localhost:5000', {
+    socketRef.current = io('http://192.168.1.8:5000', {
       transports: ['websocket'],
       autoConnect: true,
     });
@@ -184,7 +184,7 @@ export default function MapScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
       {/* Map */}
       <MapView
         style={styles.map}
@@ -212,7 +212,7 @@ export default function MapScreen() {
           pinColor="red"
         />
 
-        {/* Route polyline - dashed line showing planned route */}
+        {/* Route polyline */}
         <Polyline
           coordinates={[pickupCoords, dropoffCoords]}
           strokeColor="#3B82F6"
@@ -227,15 +227,15 @@ export default function MapScreen() {
             title={driver?.name}
             description={driver?.vehicle}
           >
-            <View className="bg-blue-500 rounded-full p-2 border-2 border-white shadow-lg">
-              <Text style={{ fontSize: 20 }}>
+            <View style={styles.driverMarker}>
+              <Text style={styles.driverIcon}>
                 {vehicleType === 'bike' ? '🏍️' : vehicleType === 'auto' ? '🛻' : '🚗'}
               </Text>
             </View>
           </Marker>
         )}
 
-        {/* Progress circle at pickup when driver is arriving */}
+        {/* Progress circle */}
         {status === 'arriving' && driverLocation && (
           <Circle
             center={pickupCoords}
@@ -247,14 +247,14 @@ export default function MapScreen() {
       </MapView>
 
       {/* Status Bar */}
-      <View className="absolute top-0 left-0 right-0 bg-white/90 backdrop-blur-sm px-4 py-3 border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
+      <View style={styles.statusBar}>
+        <View style={styles.statusInner}>
           <View>
-            <Text className="font-bold text-gray-900">
+            <Text style={styles.statusTitle}>
               {status === 'searching' ? 'Finding driver...' : 'Driver Found'}
             </Text>
             {driver && (
-              <Text className="text-sm text-gray-600">
+              <Text style={styles.statusSubtitle}>
                 {driver.name} • {driver.rating}★
               </Text>
             )}
@@ -264,229 +264,102 @@ export default function MapScreen() {
             <ActivityIndicator size="large" color="#3B82F6" />
           ) : (
             <TouchableOpacity
-              className="bg-blue-600 px-4 py-2 rounded-lg"
+              style={styles.callButton}
               onPress={() => navigation.navigate('Chat')}
             >
-              <Text className="text-white font-medium">Call</Text>
+              <Text style={styles.callButtonText}>Call</Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Progress steps */}
-        <View className="flex-row items-center mt-4">
-          <View
-            className={`w-8 h-8 rounded-full items-center justify-center ${
-              ['searching', 'accepted', 'arriving', 'ongoing', 'completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          >
-            <Text className="text-white text-xs">✓</Text>
+        <View style={styles.progressRow}>
+          <View style={[styles.step, status !== 'none' ? styles.stepActive : styles.stepInactive]}>
+            <Text style={styles.stepText}>✓</Text>
           </View>
-          <View
-            className={`flex-1 h-1 mx-2 ${
-              ['accepted', 'arriving', 'ongoing', 'completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          />
-          <View
-            className={`w-8 h-8 rounded-full items-center justify-center ${
-              ['arriving', 'ongoing', 'completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          >
-            <Text className="text-white text-xs">📍</Text>
+          <View style={[styles.stepLine, ['accepted', 'arriving', 'ongoing', 'completed'].includes(status) ? styles.stepLineActive : styles.stepLineInactive]} />
+          <View style={[styles.step, ['arriving', 'ongoing', 'completed'].includes(status) ? styles.stepActive : styles.stepInactive]}>
+            <Text style={styles.stepText}>📍</Text>
           </View>
-          <View
-            className={`flex-1 h-1 mx-2 ${
-              ['ongoing', 'completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          />
-          <View
-            className={`w-8 h-8 rounded-full items-center justify-center ${
-              ['completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          >
-            <Text className="text-white text-xs">🏁</Text>
+          <View style={[styles.stepLine, ['ongoing', 'completed'].includes(status) ? styles.stepLineActive : styles.stepLineInactive]} />
+          <View style={[styles.step, status === 'completed' ? styles.stepActive : styles.stepInactive]}>
+            <Text style={styles.stepText}>🏁</Text>
           </View>
         </View>
       </View>
 
       {/* Bottom Sheet */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 shadow-2xl">
+      <View style={styles.bottomSheet}>
         {status === 'searching' && (
-          <View>
-            <Text className="text-center text-lg font-bold text-gray-900 mb-2">
-              Searching for nearby {vehicleType}s
-            </Text>
-            <Text className="text-center text-gray-500">
-              Finding the best driver for you...
-            </Text>
-            <ActivityIndicator size="large" color="#3B82F6" className="mt-6" />
+          <View style={styles.searchingContainer}>
+            <Text style={styles.searchingTitle}>Searching for nearby {vehicleType}s</Text>
+            <Text style={styles.searchingSubtitle}>Finding the best driver for you...</Text>
+            <ActivityIndicator size="large" color="#3B82F6" style={styles.loader} />
           </View>
         )}
 
         {status === 'accepted' && driver && (
           <View>
-            <View className="flex-row items-center mb-4">
-              <View className="h-16 w-16 rounded-full bg-blue-100 items-center justify-center mr-4">
-                <Text className="text-2xl">
+            <View style={styles.driverInfoRow}>
+              <View style={styles.driverAvatar}>
+                <Text style={styles.driverIconSmall}>
                   {vehicleType === 'bike' ? '🏍️' : vehicleType === 'auto' ? '🛻' : '🚗'}
                 </Text>
               </View>
-              <View className="flex-1">
-                <Text className="text-lg font-bold">{driver.name}</Text>
-                <Text className="text-gray-500">
-                  {vehicleType.toUpperCase()} • {driver.vehicle}
-                </Text>
+              <View style={styles.driverDetail}>
+                <Text style={styles.driverName}>{driver.name}</Text>
+                <Text style={styles.vehicleDetail}>{vehicleType.toUpperCase()} • {driver.vehicle}</Text>
               </View>
-              <View className="bg-green-100 px-3 py-1 rounded-full">
-                <Text className="text-green-700 font-bold">{driver.rating}★</Text>
+              <View style={styles.ratingBadge}>
+                <Text style={styles.ratingText}>{driver.rating}★</Text>
               </View>
             </View>
 
-            <View className="flex-row justify-between items-center">
-              <Text className="font-bold text-xl text-gray-900">
-                ₹{Math.round(estimatedFare)}
-              </Text>
-              <TouchableOpacity
-                className="bg-blue-600 px-6 py-3 rounded-full"
-                onPress={handleDriverArriving}
-              >
-                <Text className="text-white font-bold">Driver Arriving</Text>
+            <View style={styles.actionRow}>
+              <Text style={styles.fareMain}>₹{Math.round(estimatedFare)}</Text>
+              <TouchableOpacity style={styles.actionButton} onPress={handleDriverArriving}>
+                <Text style={styles.actionButtonText}>Driver Arriving</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Distance info */}
-            <View className="mt-4 bg-blue-50 rounded-xl p-3">
-              <Text className="text-blue-800 text-sm">
-                Driver is {status === 'arriving' ? 'arriving' : 'on the way'} • {Math.round((currentPathIndex / routePath.length) * 100)}% complete to pickup
-              </Text>
-            </View>
           </View>
         )}
 
         {status === 'arriving' && (
           <View>
-            <Text className="text-lg font-bold mb-4">Driver has arrived at pickup</Text>
-            <View className="bg-yellow-50 rounded-xl p-3 mb-4">
-              <Text className="text-yellow-800 text-sm">
-                Your driver is waiting at the pickup location
-              </Text>
+            <Text style={styles.arrivingTitle}>Driver has arrived at pickup</Text>
+            <View style={styles.alertBox}>
+              <Text style={styles.alertText}>Your driver is waiting at the pickup location</Text>
             </View>
-            <TouchableOpacity
-              className="bg-green-600 py-3 rounded-xl items-center"
-              onPress={handleStartRide}
-            >
-              <Text className="text-white font-bold">Start Ride</Text>
+            <TouchableOpacity style={styles.startButton} onPress={handleStartRide}>
+              <Text style={styles.startButtonText}>Start Ride</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {status === 'ongoing' && (
           <View>
-            <Text className="text-lg font-bold mb-4">Ride in progress</Text>
-            <View className="flex-row justify-between items-center bg-blue-50 p-4 rounded-xl">
-              <View>
-                <Text className="text-gray-500 text-sm">Distance</Text>
-                <Text className="font-bold">{distance.toFixed(1)} km</Text>
+            <Text style={styles.arrivingTitle}>Ride in progress</Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Distance</Text>
+                <Text style={styles.statValue}>{distance.toFixed(1)} km</Text>
               </View>
-              <View>
-                <Text className="text-gray-500 text-sm">Fare</Text>
-                <Text className="font-bold">₹{Math.round(estimatedFare)}</Text>
-              </View>
-              <View>
-                <Text className="text-gray-500 text-sm">Progress</Text>
-                <Text className="font-bold">{Math.round((currentPathIndex / routePath.length) * 100)}%</Text>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Fare</Text>
+                <Text style={styles.statValue}>₹{Math.round(estimatedFare)}</Text>
               </View>
             </View>
-            <TouchableOpacity
-              className="bg-green-600 py-3 rounded-xl items-center mt-4"
-              onPress={handleCompleteRide}
-            >
-              <Text className="text-white font-bold">Complete Ride</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {status === 'arriving' && (
-          <View>
-            <Text className="text-lg font-bold mb-4">Driver is arriving</Text>
-            <View className="bg-yellow-50 rounded-xl p-3 mb-4">
-              <Text className="text-yellow-800 text-sm">
-                Driver has arrived at pickup location
-              </Text>
-            </View>
-            <TouchableOpacity
-              className="bg-green-600 py-3 rounded-xl items-center"
-              onPress={() => setStatus('ongoing')}
-            >
-              <Text className="text-white font-bold">Start Ride</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {status === 'ongoing' && (
-          <View>
-            <Text className="text-lg font-bold mb-4">Ride in progress</Text>
-            <View className="flex-row justify-between items-center bg-blue-50 p-4 rounded-xl">
-              <View>
-                <Text className="text-gray-500 text-sm">Distance</Text>
-                <Text className="font-bold">{distance.toFixed(1)} km</Text>
-              </View>
-              <View>
-                <Text className="text-gray-500 text-sm">Fare</Text>
-                <Text className="font-bold">₹{Math.round(estimatedFare)}</Text>
-              </View>
-              <View>
-                <Text className="text-gray-500 text-sm">Progress</Text>
-                <Text className="font-bold">{Math.round((currentPathIndex / routePath.length) * 100)}%</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              className="bg-green-600 py-3 rounded-xl items-center mt-4"
-              onPress={() => setStatus('completed')}
-            >
-              <Text className="text-white font-bold">Complete Ride</Text>
+            <TouchableOpacity style={styles.completeButton} onPress={handleCompleteRide}>
+              <Text style={styles.startButtonText}>Complete Ride</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {status === 'completed' && (
           <View>
-            <Text className="text-2xl font-bold text-green-600 mb-4 text-center">
-              Ride Completed!
-            </Text>
-            <View className="bg-gray-50 rounded-xl p-4 mb-4">
-              <Text className="text-gray-900 font-bold mb-2">Ride Summary</Text>
-              <View className="flex-row justify-between mb-1">
-                <Text className="text-gray-600">Distance</Text>
-                <Text>{distance.toFixed(1)} km</Text>
-              </View>
-              <View className="flex-row justify-between mb-1">
-                <Text className="text-gray-600">Vehicle</Text>
-                <Text className="capitalize">{vehicleType}</Text>
-              </View>
-              <View className="border-t border-gray-300 my-2" />
-              <View className="flex-row justify-between">
-                <Text className="font-bold">Total</Text>
-                <Text className="font-bold text-green-600">
-                  ₹{Math.round(estimatedFare)}
-                </Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              className="bg-blue-600 py-3 rounded-xl items-center mb-3"
-              onPress={() => navigation.popToTop()}
-            >
-              <Text className="text-white font-bold">Back to Home</Text>
+            <Text style={styles.completedTitle}>Ride Completed!</Text>
+            <TouchableOpacity style={styles.homeButton} onPress={() => navigation.popToTop()}>
+              <Text style={styles.homeButtonText}>Back to Home</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -496,268 +369,249 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   map: {
     width,
     height,
   },
-});
-        setDriverLocation({ latitude: 12.9716, longitude: 77.5946 }); // Bangalore
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
-
-  // Mock coordinates for demonstration
-  const pickupCoords = { latitude: 12.9716, longitude: 77.5946 };
-  const dropoffCoords = { latitude: 12.9352, longitude: 77.6245 };
-
-  return (
-    <View className="flex-1">
-      {/* Map */}
-      <MapView
-        style={styles.map}
-        initialRegion={{
-          ...pickupCoords,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        }}
-      >
-        {/* Pickup marker */}
-        <Marker
-          coordinate={pickupCoords}
-          title="Pickup"
-          description={pickup}
-          pinColor="green"
-        />
-
-        {/* Dropoff marker */}
-        <Marker
-          coordinate={dropoffCoords}
-          title="Dropoff"
-          description={dropoff}
-          pinColor="red"
-        />
-
-        {/* Route line */}
-        <Polyline
-          coordinates={[pickupCoords, dropoffCoords]}
-          strokeColor="#3B82F6"
-          strokeWidth={4}
-        />
-
-        {/* Driver marker */}
-        {driverLocation && status !== 'searching' && (
-          <Marker
-            coordinate={driverLocation}
-            title={driver?.name}
-            description={driver?.vehicle}
-          />
-        )}
-      </Map>
-
-      {/* Status Bar */}
-      <View className="absolute top-0 left-0 right-0 bg-white/90 backdrop-blur-sm px-4 py-3 border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
-          <View>
-            <Text className="font-bold text-gray-900">
-              {status === 'searching' ? 'Finding driver...' : 'Driver Found'}
-            </Text>
-            {driver && (
-              <Text className="text-sm text-gray-600">
-                {driver.name} • {driver.rating}★
-              </Text>
-            )}
-          </View>
-
-          {status === 'searching' ? (
-            <ActivityIndicator size="large" color="#3B82F6" />
-          ) : (
-            <TouchableOpacity
-              className="bg-blue-600 px-4 py-2 rounded-lg"
-              onPress={() => navigation.navigate('Chat')}
-            >
-              <Text className="text-white font-medium">Call</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Progress steps */}
-        <View className="flex-row items-center mt-4">
-          <View
-            className={`w-8 h-8 rounded-full items-center justify-center ${
-              ['searching', 'accepted', 'arriving', 'ongoing', 'completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          >
-            <Text className="text-white text-xs">✓</Text>
-          </View>
-          <View
-            className={`flex-1 h-1 mx-2 ${
-              ['accepted', 'arriving', 'ongoing', 'completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          />
-          <View
-            className={`w-8 h-8 rounded-full items-center justify-center ${
-              ['arriving', 'ongoing', 'completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          >
-            <Text className="text-white text-xs">📍</Text>
-          </View>
-          <View
-            className={`flex-1 h-1 mx-2 ${
-              ['ongoing', 'completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          />
-          <View
-            className={`w-8 h-8 rounded-full items-center justify-center ${
-              ['completed'].includes(status)
-                ? 'bg-green-500'
-                : 'bg-gray-300'
-            }`}
-          >
-            <Text className="text-white text-xs">🏁</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Bottom Sheet */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 shadow-2xl">
-        {status === 'searching' && (
-          <View>
-            <Text className="text-center text-lg font-bold text-gray-900 mb-2">
-              Searching for nearby {vehicleType}s
-            </Text>
-            <Text className="text-center text-gray-500">
-              Finding the best driver for you...
-            </Text>
-            <ActivityIndicator size="large" color="#3B82F6" className="mt-6" />
-          </View>
-        )}
-
-        {status === 'accepted' && driver && (
-          <View>
-            <View className="flex-row items-center mb-4">
-              <View className="h-16 w-16 rounded-full bg-blue-100 items-center justify-center mr-4">
-                <Text className="text-2xl">
-                  {vehicleType === 'bike' ? '🏍️' : vehicleType === 'auto' ? '🛻' : '🚗'}
-                </Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-lg font-bold">{driver.name}</Text>
-                <Text className="text-gray-500">
-                  {vehicleType.toUpperCase()} • {driver.vehicle}
-                </Text>
-              </View>
-              <View className="bg-green-100 px-3 py-1 rounded-full">
-                <Text className="text-green-700 font-bold">{driver.rating}★</Text>
-              </View>
-            </View>
-
-            <View className="flex-row justify-between items-center">
-              <Text className="font-bold text-xl text-gray-900">
-                ₹{Math.round(estimatedFare)}
-              </Text>
-              <TouchableOpacity
-                className="bg-blue-600 px-6 py-3 rounded-full"
-                onPress={() => setStatus('arriving')}
-              >
-                <Text className="text-white font-bold">Driver Arriving</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {status === 'arriving' && (
-          <View>
-            <Text className="text-lg font-bold mb-4">Driver is arriving</Text>
-            <TouchableOpacity
-              className="bg-green-600 py-3 rounded-xl items-center"
-              onPress={() => setStatus('ongoing')}
-            >
-              <Text className="text-white font-bold">Start Ride</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {status === 'ongoing' && (
-          <View>
-            <Text className="text-lg font-bold mb-4">Ride in progress</Text>
-            <View className="flex-row justify-between items-center bg-blue-50 p-4 rounded-xl">
-              <View>
-                <Text className="text-gray-500 text-sm">Distance</Text>
-                <Text className="font-bold">{distance.toFixed(1)} km</Text>
-              </View>
-              <View>
-                <Text className="text-gray-500 text-sm">Fare</Text>
-                <Text className="font-bold">₹{Math.round(estimatedFare)}</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              className="bg-green-600 py-3 rounded-xl items-center mt-4"
-              onPress={() => setStatus('completed')}
-            >
-              <Text className="text-white font-bold">Complete Ride</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {status === 'completed' && (
-          <View>
-            <Text className="text-2xl font-bold text-green-600 mb-4 text-center">
-              Ride Completed!
-            </Text>
-            <View className="bg-gray-50 rounded-xl p-4 mb-4">
-              <Text className="text-gray-900 font-bold mb-2">Ride Summary</Text>
-              <View className="flex-row justify-between mb-1">
-                <Text className="text-gray-600">Distance</Text>
-                <Text>{distance.toFixed(1)} km</Text>
-              </View>
-              <View className="flex-row justify-between mb-1">
-                <Text className="text-gray-600">Vehicle</Text>
-                <Text className="capitalize">{vehicleType}</Text>
-              </View>
-              <View className="border-t border-gray-300 my-2" />
-              <View className="flex-row justify-between">
-                <Text className="font-bold">Total</Text>
-                <Text className="font-bold text-green-600">
-                  ₹{Math.round(estimatedFare)}
-                </Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              className="bg-blue-600 py-3 rounded-xl items-center mb-3"
-              onPress={() => {
-                // Navigate to payment
-                navigation.popToTop();
-              }}
-            >
-              <Text className="text-white font-bold">Pay Now</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="py-2 items-center"
-              onPress={() => navigation.popToTop()}
-            >
-              <Text className="text-gray-500">Back to Home</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  map: {
-    width,
-    height,
+  driverMarker: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 20,
+    padding: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  driverIcon: {
+    fontSize: 20,
+  },
+  statusBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  statusInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statusTitle: {
+    fontWeight: 'bold',
+    color: '#111827',
+    fontSize: 16,
+  },
+  statusSubtitle: {
+    fontSize: 14,
+    color: '#4B5563',
+  },
+  callButton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  callButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  step: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepActive: {
+    backgroundColor: '#10B981',
+  },
+  stepInactive: {
+    backgroundColor: '#D1D5DB',
+  },
+  stepText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+  },
+  stepLine: {
+    flex: 1,
+    height: 4,
+    marginHorizontal: 8,
+  },
+  stepLineActive: {
+    backgroundColor: '#10B981',
+  },
+  stepLineInactive: {
+    backgroundColor: '#D1D5DB',
+  },
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 20,
+  },
+  searchingContainer: {
+    alignItems: 'center',
+  },
+  searchingTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  searchingSubtitle: {
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  loader: {
+    marginTop: 24,
+  },
+  driverInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  driverAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  driverIconSmall: {
+    fontSize: 24,
+  },
+  driverDetail: {
+    flex: 1,
+  },
+  driverName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  vehicleDetail: {
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  ratingBadge: {
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  ratingText: {
+    color: '#065F46',
+    fontWeight: 'bold',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  fareMain: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  actionButton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  arrivingTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  alertBox: {
+    backgroundColor: '#FEF3C7',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  alertText: {
+    color: '#92400E',
+    fontSize: 14,
+  },
+  startButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  startButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#EFF6FF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statLabel: {
+    color: '#6B7280',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  statValue: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  completeButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  completedTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#10B981',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  homeButton: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  homeButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });
