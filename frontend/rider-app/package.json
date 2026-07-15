@@ -39,6 +39,7 @@
     "@react-native-community/cli": "latest",
     "@react-native-community/cli-platform-android": "latest",
     "@react-native-community/cli-platform-ios": "latest",
+    "@react-native/metro-config": "^0.86.0",
     "babel-preset-expo": "^55.0.18",
     "metro": "~0.80.8",
     "nativewind": "^4.2.3",
